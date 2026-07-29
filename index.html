@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match the task to the tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #3a0d10;
+    --page: #e7efec;
+    --card: #ffffff;
+    --anthropic: #d97757;
+    --openai: #111111;
+    --google: #34a853;
+    --microsoft: #4a8fe7;
+    --good: #1d9e75;
+    --bad: #d64545;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: "Archivo", sans-serif;
+    background: var(--page);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .stage { width: 100%; max-width: 860px; }
+  h1 {
+    font-family: "Archivo Black", sans-serif;
+    text-transform: uppercase;
+    font-size: clamp(26px, 4.5vw, 44px);
+    letter-spacing: 0.5px;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .sub { color: #5f5e5a; font-size: 15px; margin-bottom: 24px; }
+  .panel {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 2px 0 rgba(58,13,16,0.08);
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #5f5e5a;
+    margin-bottom: 12px;
+  }
+  .timerTrack { height: 8px; background: var(--page); border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+  .timerBar { height: 100%; width: 100%; background: var(--ink); border-radius: 4px; transition: width 0.1s linear; }
+  .question { font-size: clamp(18px, 2.6vw, 24px); font-weight: 600; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .tile {
+    border: none;
+    border-radius: 12px;
+    padding: 20px 16px;
+    font-family: "Archivo", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+  }
+  .tile:hover:not(:disabled) { transform: translateY(-2px); }
+  .tile:active:not(:disabled) { transform: scale(0.98); }
+  .tile:disabled { cursor: default; }
+  .tile .shape { font-size: 14px; }
+  .t0 { background: var(--anthropic); }
+  .t1 { background: var(--openai); }
+  .t2 { background: var(--google); }
+  .t3 { background: var(--microsoft); }
+  .dim { opacity: 0.35; }
+  .win { outline: 4px solid var(--good); outline-offset: 2px; }
+  .lose { outline: 4px solid var(--bad); outline-offset: 2px; }
+  .feedback { margin-top: 18px; font-size: 15px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 40px; }
+  .verdict { font-weight: 700; }
+  .verdict.ok { color: var(--good); }
+  .verdict.no { color: var(--bad); }
+  .btn {
+    font-family: "Archivo Black", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 14px;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+  .center { text-align: center; padding: 30px 10px; }
+  .bigScore {
+    font-family: "Archivo Black", sans-serif;
+    font-size: clamp(40px, 7vw, 64px);
+    line-height: 1;
+    margin: 10px 0 4px;
+  }
+  .tag { font-size: 16px; color: #5f5e5a; margin-bottom: 24px; }
+  .legend { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 22px; font-size: 12px; font-weight: 600; color: #5f5e5a; }
+  .legend span::before { content: "●"; margin-right: 5px; }
+  .lg0::before { color: var(--anthropic); }
+  .lg1::before { color: var(--openai); }
+  .lg2::before { color: var(--google); }
+  .lg3::before { color: var(--microsoft); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <h1>Same job, same brands</h1>
+  <p class="sub">Match the task to the tool &mdash; 10 rounds, faster answers score more (up to 1,000 pts)</p>
+  <div class="panel" id="panel">
+    <div class="center">
+      <p style="font-size:17px; margin-bottom:22px;">First learn what each tool does, then match the task to the tool.</p>
+      <button class="btn" onclick="learn()">Learn the tools</button>
+      <button class="btn ghost" onclick="startGame()">Skip to game</button>
+      <div class="legend">
+        <span class="lg0">Anthropic</span><span class="lg1">OpenAI</span><span class="lg2">Google</span><span class="lg3">Microsoft</span>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const QS = [
+  { q: "Generate a cinematic video from a text prompt",
+    a: ["Veo", "Jules", "NotebookLM", "Operator"], c: 0,
+    f: "Veo is Google's video model, on the Creative row." },
+  { q: "Fix a bug across your whole repo, agent-style",
+    a: ["Copilot Studio", "Claude Code", "Sora", "Gemini"], c: 1,
+    f: "Claude Code is Anthropic's entry on the Coding row." },
+  { q: "Turn your PDFs and sources into a podcast",
+    a: ["Designer", "Codex", "NotebookLM", "AgentKit"], c: 2,
+    f: "NotebookLM sits on the Research row for Google." },
+  { q: "Click through websites to book a table for you",
+    a: ["Cowork", "Imagen", "Researcher", "Operator"], c: 3,
+    f: "Operator is OpenAI's browser agent on the Agents row." },
+  { q: "AI built into Word, Excel, and Teams",
+    a: ["M365 Copilot", "ChatGPT", "AI Studio", "Claude Design"], c: 0,
+    f: "M365 Copilot is Microsoft's Office-row answer." },
+  { q: "Fast and lightweight tier for simple, high-volume tasks",
+    a: ["Claude Opus", "Claude Haiku", "Claude Sonnet", "Deep Research"], c: 1,
+    f: "Haiku is the fast tier; Sonnet balances; Opus reasons deep." },
+  { q: "Turn a rough idea into a clickable prototype or pitch deck",
+    a: ["Mariner", "GitHub Copilot", "Claude Design", "Gemini Pro"], c: 2,
+    f: "Claude Design is Anthropic's Creative-row entry." },
+  { q: "Build a custom low-code agent for your company",
+    a: ["Sora", "Flash-Lite", "Claude Haiku", "Copilot Studio"], c: 3,
+    f: "Copilot Studio is Microsoft's Build-row answer." },
+  { q: "Deep reasoning tier on the Claude ladder",
+    a: ["Claude Opus", "Flash-Lite", "Copilot Edge", "Designer"], c: 0,
+    f: "Opus tops the ladder: deep reasoning over speed." },
+  { q: "Google's coding agent that drafts pull requests for you",
+    a: ["Codex", "Jules", "Mariner", "Workspace"], c: 1,
+    f: "Jules is Google's Coding-row agent; Codex is OpenAI's." }
+];
+const LEARN = [
+  { row: "Chat", items: [
+    ["Claude / ChatGPT / Gemini / Copilot", "Your everyday assistant: ask, write, summarize, brainstorm."]
+  ]},
+  { row: "Coding", items: [
+    ["Claude Code", "Agent that works inside your repo: fixes bugs, builds features."],
+    ["Codex", "OpenAI's coding agent: writes and edits code, runs commands."],
+    ["Jules", "Google's agent that reads GitHub issues and drafts pull requests."],
+    ["GitHub Copilot", "Autocomplete and agents inside your code editor."]
+  ]},
+  { row: "Agents", items: [
+    ["Cowork", "Desktop agent for documents, files, and multi-step office work."],
+    ["Operator", "Browser agent: clicks through websites, fills forms, books for you."],
+    ["Mariner", "Google's browser agent: runs web tasks in the background."],
+    ["Copilot Actions", "Automates tasks across your Microsoft apps."]
+  ]},
+  { row: "Creative", items: [
+    ["Claude Design", "Turns an idea into prototypes, slides, and one-pagers."],
+    ["Sora", "Generates video with sound from a text prompt."],
+    ["Veo \u00b7 Imagen", "Google's video and image generation models."],
+    ["Designer", "Microsoft's image and visual design generator."]
+  ]},
+  { row: "Research", items: [
+    ["Research (Claude)", "Deep multi-source investigation with a sourced report."],
+    ["Deep Research", "ChatGPT's long, cited research reports."],
+    ["NotebookLM", "Answers only from YOUR files, and turns them into a podcast."],
+    ["Researcher", "Digs through your company's M365 data for answers."]
+  ]},
+  { row: "Office", items: [
+    ["Claude in Office Apps", "Claude working inside Excel and PowerPoint."],
+    ["Workspace", "Gemini inside Gmail, Docs, and Sheets."],
+    ["M365 Copilot", "AI inside Word, Excel, Outlook, and Teams."]
+  ]},
+  { row: "Build", items: [
+    ["Claude API / AgentKit / AI Studio / Copilot Studio", "Platforms for building your own AI apps and agents."]
+  ]},
+  { row: "Model ladder", items: [
+    ["Fast and lightweight", "Claude Haiku, Flash / Flash-Lite: quick, cheap, high volume."],
+    ["Balanced standard", "Claude Sonnet, Gemini Pro: the everyday default."],
+    ["Deep reasoning", "Claude Opus, Deep Research / o3: slow thinking, hard problems."]
+  ]}
+];
+function learn() {
+  let html = '<div class="meta"><span>Study round</span><span>What each tool does</span></div>';
+  for (const g of LEARN) {
+    html += '<div style="margin-bottom:16px;">' +
+      '<div style="font-family:\'Archivo Black\', sans-serif; text-transform:uppercase; font-size:13px; letter-spacing:0.6px; margin-bottom:6px;">' + g.row + '</div>';
+    for (const it of g.items) {
+      html += '<div style="font-size:14px; padding:4px 0; border-bottom:1px solid #f0ece9;">' +
+        '<strong>' + it[0] + '</strong> <span style="color:#5f5e5a;">&mdash; ' + it[1] + '</span></div>';
+    }
+    html += '</div>';
+  }
+  html += '<div class="center" style="padding-top:10px; padding-bottom:0;">' +
+    '<button class="btn" onclick="startGame()">I\u2019m ready, start the game</button></div>';
+  panel.innerHTML = html;
+}
+const SHAPES = ["\u25B2", "\u25A0", "\u25CF", "\u25C6"];
+let i = 0, score = 0, correct = 0, left = 15, timer = null;
+const panel = document.getElementById("panel");
+
+function startGame() { i = 0; score = 0; correct = 0; showQ(); }
+
+function showQ() {
+  clearInterval(timer);
+  left = 15;
+  const Q = QS[i];
+  let tiles = "";
+  for (let k = 0; k < 4; k++) {
+    tiles += '<button class="tile t' + k + '" id="tile' + k + '" onclick="pick(' + k + ')">' +
+      '<span class="shape">' + SHAPES[k] + '</span>' + Q.a[k] + '</button>';
+  }
+  panel.innerHTML =
+    '<div class="meta"><span>Question ' + (i + 1) + ' / ' + QS.length + '</span><span>Score ' + score.toLocaleString() + '</span></div>' +
+    '<div class="timerTrack"><div class="timerBar" id="bar"></div></div>' +
+    '<p class="question">' + Q.q + '</p>' +
+    '<div class="grid">' + tiles + '</div>' +
+    '<div class="feedback" id="fb"></div>';
+  timer = setInterval(function () {
+    left -= 0.1;
+    if (left <= 0) { left = 0; pick(-1); }
+    document.getElementById("bar").style.width = Math.round(left / 15 * 100) + "%";
+  }, 100);
+}
+
+function pick(k) {
+  clearInterval(timer);
+  const Q = QS[i];
+  for (let j = 0; j < 4; j++) {
+    const b = document.getElementById("tile" + j);
+    b.disabled = true;
+    if (j === Q.c) { b.classList.add("win"); }
+    else if (j === k) { b.classList.add("lose"); }
+    else { b.classList.add("dim"); }
+  }
+  let verdict;
+  if (k === Q.c) {
+    const pts = Math.round(500 + 500 * (left / 15));
+    score += pts; correct++;
+    verdict = '<span class="verdict ok">Correct +' + pts + '</span>';
+  } else if (k === -1) {
+    verdict = '<span class="verdict no">Time up</span>';
+  } else {
+    verdict = '<span class="verdict no">Not quite</span>';
+  }
+  document.getElementById("fb").innerHTML =
+    verdict + '<span>' + Q.f + '</span>' +
+    '<button class="btn" style="margin-left:auto; font-size:12px; padding:9px 20px;" onclick="next()">' +
+    (i < QS.length - 1 ? "Next" : "Results") + '</button>';
+}
+
+function next() { i++; if (i < QS.length) showQ(); else end(); }
+
+function end() {
+  const tag = correct >= 9 ? "AI Academy legend" :
+              correct >= 7 ? "Champion material" :
+              correct >= 5 ? "Solid fluency" : "Back to level 1";
+  panel.innerHTML =
+    '<div class="center">' +
+    '<div class="meta" style="justify-content:center;">Final score</div>' +
+    '<div class="bigScore">' + score.toLocaleString() + '</div>' +
+    '<p class="tag">' + correct + ' of ' + QS.length + ' correct &mdash; ' + tag + '</p>' +
+    '<button class="btn" onclick="startGame()">Play again</button> ' +
+    '<button class="btn ghost" onclick="review()">Review answers</button>' +
+    '</div>';
+}
+
+function review() {
+  let rows = "";
+  for (const Q of QS) {
+    rows += '<div style="padding:12px 0; border-bottom:1px solid #eee;">' +
+      '<div style="font-weight:600; font-size:15px;">' + Q.q + '</div>' +
+      '<div style="font-size:14px; color:#5f5e5a; margin-top:3px;"><strong style="color:var(--good);">' +
+      Q.a[Q.c] + '</strong> &mdash; ' + Q.f + '</div></div>';
+  }
+  panel.innerHTML = rows +
+    '<div class="center" style="padding-top:22px; padding-bottom:0;">' +
+    '<button class="btn" onclick="startGame()">Play again</button></div>';
+}
+</script>
+</body>
+</html>

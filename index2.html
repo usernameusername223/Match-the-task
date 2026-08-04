@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beesline AI Academy — Stock the Shelf</title>
+<style>
+  :root{
+    --green:#1c5438; --green-deep:#123b27; --purple:#7B2D8E; --purple-soft:#f3e9f5;
+    --sage:#eef2ef; --sage-line:#d7e1da; --ink:#22392e; --white:#fff;
+    --gold:#c8a24a; --muted:#5f7266; --good:#1c7d4d; --stop:#b23b3b;
+    --anthropic:#c15f3c; --openai:#111111; --google:#3f7ce0; --microsoft:#0a7cc4;
+    --title:Cambria,Georgia,'Times New Roman',serif;
+    --body:Calibri,'Segoe UI','Trebuchet MS',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:var(--body); color:var(--ink);
+    background:radial-gradient(120% 120% at 50% 0%,#f6f9f6 0%,#e7eee9 100%);
+    min-height:100vh; display:flex; flex-direction:column;}
+  .stage{flex:1; display:flex; flex-direction:column; max-width:1160px; width:100%; margin:0 auto; padding:22px 26px 0;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .dot{width:14px; height:34px; background:var(--purple); border-radius:3px;}
+  .brand h1{font-family:var(--title); color:var(--green); font-size:20px; margin:0; font-weight:700;}
+  .brand span{display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--purple); font-weight:700; margin-top:2px;}
+  .phasetag{font-family:var(--body); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--purple); background:var(--purple-soft); padding:6px 14px; border-radius:20px;}
+
+  .panel{background:var(--white); border:1px solid var(--sage-line); border-radius:18px; padding:32px 38px; flex:1; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(28,84,56,.06);}
+  .panel.center{align-items:center; justify-content:center; text-align:center;}
+  h2.big{font-family:var(--title); color:var(--green); font-size:36px; margin:0 0 6px; font-weight:700;}
+  .eyebrow{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--purple); font-weight:700; margin-bottom:10px;}
+  .sub{color:var(--muted); font-size:16px; margin:0; max-width:600px;}
+
+  /* Phase 1 — shelf */
+  .job-head{display:flex; align-items:baseline; gap:14px; margin-bottom:4px;}
+  .job-head .jt{font-family:var(--title); color:var(--green-deep); font-size:30px; font-weight:700;}
+  .job-head .jc{font-size:15px; color:var(--muted);}
+  .prompt{font-size:16px; color:var(--ink); margin:8px 0 22px;}
+  .shelf{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:8px;}
+  .col{display:flex; flex-direction:column;}
+  .fam{display:flex; align-items:center; gap:8px; justify-content:center; padding:9px; border-radius:10px 10px 0 0; color:#fff; font-family:var(--title); font-weight:700; font-size:15px;}
+  .fam .chip{width:14px;height:14px;border-radius:4px;background:rgba(255,255,255,.85);}
+  .card{background:var(--purple); border-radius:0 0 12px 12px; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:16px 12px; transition:.2s;}
+  .card .qmark{font-family:var(--title); font-size:40px; color:#d9b9e2; font-weight:700;}
+  .card.up{background:var(--sage);}
+  .card .pname{font-family:var(--title); font-weight:700; font-size:19px; color:var(--green-deep); line-height:1.25;}
+  .card .note{font-size:12px; color:var(--stop); margin-top:8px; font-weight:700;}
+  .card .none{font-family:var(--title); font-size:24px; color:var(--muted);}
+  .shelf-plank{height:9px; background:linear-gradient(var(--gold),#a8842f); border-radius:0 0 4px 4px; margin-top:-2px;}
+
+  /* Phase 2 — order ticket */
+  .ticket{background:var(--sage); border:2px dashed var(--sage-line); border-radius:14px; padding:22px 26px; max-width:760px; margin:0 auto 22px; position:relative;}
+  .ticket .lbl{font-family:var(--body); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--purple); font-weight:700; margin-bottom:8px;}
+  .ticket .func{font-family:var(--title); color:var(--green); font-weight:700; font-size:16px; margin-bottom:4px;}
+  .ticket .scn{font-family:var(--title); font-size:22px; color:var(--green-deep); line-height:1.35;}
+  .choices{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:820px; margin:0 auto;}
+  .choice{background:var(--white); border:2px solid var(--sage-line); border-radius:13px; padding:16px 12px; text-align:center;}
+  .choice .cf{font-family:var(--title); font-weight:700; font-size:16px; color:var(--ink);}
+  .choice .ct{font-size:12px; color:var(--muted); margin-top:4px;}
+  .choice.best{border-color:var(--good); background:#e8f4ec;}
+  .choice.best .cf{color:var(--good);}
+  .choice.near{border-color:var(--gold); background:#fbf4e2;}
+  .choice.dim{opacity:.4;}
+  .tagpill{display:inline-block; font-size:10px; letter-spacing:1px; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:12px; margin-top:8px;}
+  .tagpill.b{background:var(--good); color:#fff;}
+  .tagpill.n{background:var(--gold); color:#3d2c05;}
+
+  .explain{margin-top:22px; background:var(--green); color:#eaf3ee; border-radius:14px; padding:18px 22px; font-size:16px; line-height:1.55; max-width:900px; margin-left:auto; margin-right:auto;}
+  .explain b{color:#fff;} .explain i{color:#cfe6d8;}
+  .explain .lbl{display:block; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#a9d3bd; font-weight:700; margin-bottom:6px;}
+  .q-type{display:inline-block; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:700; color:var(--purple); background:var(--purple-soft); padding:5px 12px; border-radius:20px; margin-bottom:14px;}
+
+  /* scoreboard + controls (shared) */
+  .scorebar{display:flex; gap:10px; flex-wrap:wrap; padding:12px 26px; max-width:1160px; width:100%; margin:0 auto;}
+  .team{display:flex; align-items:center; gap:10px; background:var(--white); border:1px solid var(--sage-line); border-radius:12px; padding:8px 10px 8px 14px;}
+  .team .nm{font-weight:700; color:var(--green); font-size:14px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .team .sc{font-family:var(--title); font-weight:700; color:var(--purple); font-size:18px; min-width:38px; text-align:center;}
+  .team button.mini{width:26px; height:26px; border-radius:7px; border:1px solid var(--sage-line); background:var(--sage); color:var(--green); font-weight:700; font-size:15px; cursor:pointer; line-height:1;}
+  .team button.mini:hover{background:var(--purple-soft);}
+  .controls{display:flex; gap:12px; justify-content:space-between; align-items:center; padding:16px 26px 24px; max-width:1160px; width:100%; margin:0 auto;}
+  .controls .left,.controls .right{display:flex; gap:12px;}
+  button.btn{font-family:var(--body); font-weight:700; font-size:16px; padding:12px 24px; border-radius:11px; border:1px solid var(--green); background:var(--white); color:var(--green); cursor:pointer; transition:.15s;}
+  button.btn:hover{background:var(--sage);}
+  button.btn.primary{background:var(--green); color:#fff;} button.btn.primary:hover{background:var(--green-deep);}
+  button.btn.purple{background:var(--purple); color:#fff; border-color:var(--purple);} button.btn.purple:hover{background:#661f77;}
+  button.btn:disabled{opacity:.35; cursor:default;}
+  button.btn.ghost{border-color:var(--sage-line); color:var(--muted);}
+
+  /* setup */
+  .setup{max-width:620px; width:100%;}
+  .setup input{width:100%; font-family:var(--body); font-size:16px; padding:12px 14px; border:1px solid var(--sage-line); border-radius:11px; margin-bottom:10px; background:var(--sage);}
+  .setup input:focus{outline:2px solid var(--purple); background:#fff;}
+  .teamlist{display:flex; flex-direction:column; gap:8px; margin:6px 0 16px;}
+  .teamlist .row{display:flex; align-items:center; gap:10px; background:var(--sage); border-radius:10px; padding:8px 12px;}
+  .teamlist .row .badge{width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .teamlist .row span{flex:1; font-weight:700; color:var(--green);}
+  .teamlist .row button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;}
+
+  /* champions */
+  .podium{display:flex; align-items:flex-end; justify-content:center; gap:18px; margin:30px 0;}
+  .pcol{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .pcol .cap{font-weight:700; color:var(--green); font-size:16px; text-align:center; max-width:160px;}
+  .pcol .bar{border-radius:12px 12px 0 0; width:150px; display:flex; align-items:flex-start; justify-content:center; padding-top:14px; color:#fff; font-family:var(--title); font-weight:700; font-size:26px;}
+  .pcol.a .bar{height:210px; background:var(--purple);}
+  .pcol.b .bar{height:150px; background:var(--green);}
+  .pcol.c .bar{height:110px; background:#7a8f81;}
+  .crown{font-size:34px; color:var(--gold);}
+  .others{display:flex; flex-direction:column; gap:8px; max-width:420px; margin:0 auto;}
+  .others .r{display:flex; justify-content:space-between; background:var(--sage); border-radius:10px; padding:10px 16px; font-weight:700; color:var(--green);}
+  .others .r .s{color:var(--purple); font-family:var(--title);}
+  .hint{font-size:13px; color:var(--muted); margin-top:14px;}
+  @media(max-width:760px){ .shelf,.choices{grid-template-columns:repeat(2,1fr);} h2.big{font-size:26px;} .panel{padding:22px;} }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="topbar">
+      <div class="brand"><div class="dot"></div>
+        <div><h1>Stock the Shelf</h1><span>Beesline AI Academy · Chapter 2</span></div></div>
+      <div class="phasetag" id="phasetag">Get set up</div>
+    </div>
+    <div class="panel" id="panel"></div>
+  </div>
+  <div class="scorebar" id="scorebar"></div>
+  <div class="controls" id="controls"></div>
+
+<script>
+/* ============================================================
+   GAME CONTENT — edit jobs, products, orders and answers here.
+   FAMILIES are the four columns; keep this order everywhere.
+   ============================================================ */
+const FAMILIES = [
+  { key:"anthropic", name:"Anthropic", chat:"Claude", color:"var(--anthropic)" },
+  { key:"openai",    name:"OpenAI",    chat:"ChatGPT", color:"var(--openai)" },
+  { key:"google",    name:"Google",    chat:"Gemini",  color:"var(--google)" },
+  { key:"microsoft", name:"Microsoft", chat:"Copilot", color:"var(--microsoft)" },
+];
+
+/* PHASE 1 — recall. products in FAMILY order: [anthropic, openai, google, microsoft]
+   Use {p:"name"} for a normal card, add note/none for special cases. */
+const JOBS = [
+  { job:"Chat", cue:"The everyday assistant you talk to.",
+    products:[{p:"Claude"},{p:"ChatGPT"},{p:"Gemini"},{p:"Copilot"}] },
+  { job:"Coding", cue:"Writing and fixing code.",
+    products:[{p:"Claude Code"},{p:"Codex"},{p:"Jules"},{p:"GitHub Copilot"}] },
+  { job:"Creative", cue:"Making images and video.",
+    products:[{p:"Claude Design"},{p:"Image in ChatGPT",note:"Sora (video) retired · Apr 2026"},{p:"Veo · Imagen"},{p:"Designer"}] },
+  { job:"Research", cue:"Digging through many documents at once.",
+    products:[{p:"Claude Research"},{p:"Deep Research"},{p:"Gemini Notebook"},{p:"Researcher"}] },
+  { job:"Office", cue:"Working inside your documents and email.",
+    products:[{p:"Claude in Office apps"},{none:true},{p:"Workspace"},{p:"M365 Copilot"}] },
+  { job:"Agents", cue:"Handing off a task for the AI to carry out.",
+    products:[{p:"Cowork"},{p:"Operator"},{p:"Mariner"},{p:"Copilot Actions"}] },
+];
+
+/* PHASE 2 — judgment. best = index into FAMILIES (0-3), or -1 for the trap.
+   near = index of the tempting near-miss (or null). */
+const ORDERS = [
+  { func:"Regulatory Affairs",
+    scenario:"Read a 40-page GCC label-compliance dossier, reason carefully through what's non-compliant, and write it up in clear language.",
+    gloss:"GCC = Gulf markets like the UAE and Saudi Arabia. A dossier = the full bundle of documents.",
+    best:0, near:3,
+    why:"This is heavy reading and careful reasoning over one long document, then clean writing — <b>Claude's</b> home turf, and Beesline's most-adopted tool. The near-miss is <b>Copilot</b>: tempting if the file's in Word, but the job is reasoning, not Office wrangling." },
+  { func:"Finance",
+    scenario:"Rebuild a broken formula and tidy up a large budget model — right inside the Excel file.",
+    gloss:null, best:3, near:0,
+    why:"The work lives <i>inside Excel</i>, so <b>M365 Copilot</b> wins — it sits in the spreadsheet with you. The near-miss is <b>Claude</b>: brilliant at the logic, but it isn't inside your workbook clicking cells." },
+  { func:"Sustainability",
+    scenario:"Summarise 25 supplier sustainability PDFs and ask questions across all of them at once.",
+    gloss:null, best:2, near:0,
+    why:"Many documents, one place to question them all — that's <b>Gemini Notebook</b>, built for grounded research across a stack of sources. The near-miss is <b>Claude</b>: strong at long context, but Notebook is purpose-built for a big document pile." },
+  { func:"Marketing", trap:true,
+    scenario:"You need an AI-generated product video for a launch. Someone shouts: \"Just use Sora!\"",
+    gloss:null, best:-1, near:1,
+    why:"<b>Trap.</b> Sora's app was retired in April 2026 — reaching for it wastes the whole session. The lesson: <b>always check a tool is still live.</b> For AI video today, reach for a current option like <b>Veo/Imagen</b>, <b>Claude Design</b> or <b>Designer</b> instead." },
+  { func:"Cosmetics Science",
+    scenario:"Reason through a tricky stability-testing trade-off, then write a clean internal summary the team can act on.",
+    gloss:"Stability testing = checking a product stays safe and effective over its shelf life.",
+    best:0, near:1,
+    why:"Careful reasoning plus polished writing points to <b>Claude</b> — Beesline's pick for deep reasoning and clean output. The near-miss is <b>ChatGPT</b>: a strong all-rounder, but this job rewards the deeper reasoning lane." },
+];
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+let TEAMS = [];
+let deck = [], idx = 0, revealed = false;
+
+function buildDeck(){
+  deck = [{kind:"setup"},{kind:"p1intro"}];
+  JOBS.forEach((j,i)=>deck.push({kind:"job", i}));
+  deck.push({kind:"p2intro"});
+  ORDERS.forEach((o,i)=>deck.push({kind:"order", i}));
+  deck.push({kind:"champions"});
+}
+buildDeck();
+
+const $ = id=>document.getElementById(id);
+const panel=$("panel"), controls=$("controls"), scorebar=$("scorebar"), phasetag=$("phasetag");
+
+function render(){
+  const s=deck[idx];
+  setPhaseTag(s);
+  renderScorebar(s);
+  ({ setup:renderSetup, p1intro:()=>renderIntro(1), p2intro:()=>renderIntro(2),
+     job:()=>renderJob(s), order:()=>renderOrder(s), champions:renderChampions }[s.kind])();
+  renderControls(s);
+}
+function setPhaseTag(s){
+  if(s.kind==="setup") phasetag.textContent="Get set up";
+  else if(s.kind==="p1intro"||s.kind==="job") phasetag.textContent="Phase 1 · Stock the Shelf";
+  else if(s.kind==="p2intro"||s.kind==="order") phasetag.textContent="Phase 2 · Fill the Order";
+  else phasetag.textContent="Champions";
+}
+
+function renderScorebar(s){
+  scorebar.innerHTML="";
+  if(s.kind==="setup"||s.kind==="champions"||TEAMS.length===0) return;
+  TEAMS.forEach((t,i)=>{
+    const el=document.createElement("div"); el.className="team";
+    el.innerHTML=`<span class="nm" title="${t.name}">${t.name}</span><span class="sc">${t.score}</span>
+      <button class="mini" data-i="${i}" data-d="-50">–</button><button class="mini" data-i="${i}" data-d="100">+</button>`;
+    scorebar.appendChild(el);
+  });
+  scorebar.querySelectorAll("button.mini").forEach(b=>b.onclick=()=>{
+    TEAMS[+b.dataset.i].score=Math.max(0,TEAMS[+b.dataset.i].score+ +b.dataset.d); renderScorebar(deck[idx]);
+  });
+}
+
+function renderSetup(){
+  panel.className="panel";
+  panel.innerHTML=`<div class="setup" style="margin:0 auto;">
+    <div class="eyebrow">Same job, four brands on the shelf</div>
+    <h2 class="big" style="font-size:30px;">Which family makes what?</h2>
+    <p class="sub" style="margin:0 0 22px;">Split the room into teams (about 4 people, one shared device). Then start stocking.</p>
+    <input id="teamInput" placeholder="Team name — e.g. The Pollinators" maxlength="26" />
+    <div class="teamlist" id="teamlist"></div>
+    <button class="btn purple" id="addTeam">Add team</button></div>`;
+  const input=$("teamInput");
+  const draw=()=>{ const l=$("teamlist"); l.innerHTML="";
+    TEAMS.forEach((t,i)=>{ const r=document.createElement("div"); r.className="row";
+      r.innerHTML=`<div class="badge">${i+1}</div><span>${t.name}</span><button data-i="${i}">×</button>`; l.appendChild(r); });
+    l.querySelectorAll("button").forEach(b=>b.onclick=()=>{TEAMS.splice(+b.dataset.i,1); draw(); renderControls(deck[idx]);}); };
+  const add=()=>{ const v=input.value.trim(); if(v){TEAMS.push({name:v,score:0}); input.value=""; draw(); renderControls(deck[idx]); input.focus();} };
+  $("addTeam").onclick=add; input.onkeydown=e=>{if(e.key==="Enter")add();}; draw();
+}
+
+function renderIntro(phase){
+  panel.className="panel center";
+  if(phase===1){
+    panel.innerHTML=`<div class="eyebrow">Phase 1 · recall warm-up</div>
+      <h2 class="big">Stock the Shelf</h2>
+      <p class="sub">Each round names a job. Your team calls out the product each family makes for it — before the cards flip. One point per correct product.</p>
+      <div class="shelf" style="max-width:820px;margin-top:26px;">
+        ${FAMILIES.map(f=>`<div class="col"><div class="fam" style="background:${f.color};"><span class="chip"></span>${f.name}</div>
+          <div class="card"><span class="qmark">?</span></div><div class="shelf-plank"></div></div>`).join("")}
+      </div>`;
+  } else {
+    panel.innerHTML=`<div class="eyebrow">Phase 2 · the judgment round</div>
+      <h2 class="big">Fill the Order</h2>
+      <p class="sub">Now the harder half. A real Beesline order comes in — your team decides which family to reach for. Watch for the traps: the obvious pick isn't always the right one.</p>`;
+  }
+}
+
+function renderJob(s){
+  const j=JOBS[s.i];
+  panel.className="panel";
+  panel.innerHTML=`
+    <div class="job-head"><span class="jt">${j.job}</span><span class="jc">${j.cue}</span></div>
+    <p class="prompt">${revealed?"Here's the shelf:":"What does each family make for this job? Call it out, then reveal."}</p>
+    <div class="shelf">
+      ${FAMILIES.map((f,i)=>{
+        const pr=j.products[i]; let body;
+        if(!revealed) body=`<span class="qmark">?</span>`;
+        else if(pr.none) body=`<span class="none">—</span>`;
+        else body=`<span class="pname">${pr.p}</span>${pr.note?`<span class="note">${pr.note}</span>`:""}`;
+        return `<div class="col">
+          <div class="fam" style="background:${f.color};"><span class="chip"></span>${f.name}</div>
+          <div class="card ${revealed?'up':''}">${body}</div>
+          <div class="shelf-plank"></div></div>`;
+      }).join("")}
+    </div>`;
+}
+
+function renderOrder(s){
+  const o=ORDERS[s.i];
+  panel.className="panel";
+  panel.innerHTML=`
+    <span class="q-type">${o.trap?"Trap round · think twice":"Order ticket · make the call"}</span>
+    <div class="ticket">
+      <div class="lbl">Order in from</div>
+      <div class="func">${o.func}</div>
+      <div class="scn">${o.scenario}</div>
+    </div>
+    ${o.gloss?`<p class="prompt" style="text-align:center;max-width:760px;margin:0 auto 20px;font-style:italic;color:var(--muted);">${o.gloss}</p>`:""}
+    <div class="choices">
+      ${FAMILIES.map((f,i)=>{
+        let cls="choice";
+        if(revealed){
+          if(i===o.best) cls+=" best";
+          else if(i===o.near) cls+=" near";
+          else cls+=" dim";
+        }
+        let pill="";
+        if(revealed){ if(i===o.best) pill=`<div class="tagpill b">Best call</div>`; else if(i===o.near) pill=`<div class="tagpill n">Tempting</div>`; }
+        return `<div class="${cls}"><div class="cf">${f.name}</div><div class="ct">${f.chat}</div>${pill}</div>`;
+      }).join("")}
+    </div>
+    ${revealed?`<div class="explain"><span class="lbl">${o.trap?"The catch":"Why"}</span>${o.why}</div>`:
+      `<p class="hint" style="text-align:center;">Teams lock in a family — then reveal the best call.</p>`}`;
+}
+
+function renderChampions(){
+  panel.className="panel center";
+  const r=[...TEAMS].sort((a,b)=>b.score-a.score); const [a,b,c]=r;
+  const podium=`<div class="podium">
+    ${b?`<div class="pcol b"><div class="cap">${b.name}</div><div class="bar">${b.score}</div></div>`:""}
+    ${a?`<div class="pcol a"><div class="crown">♛</div><div class="cap">${a.name}</div><div class="bar">${a.score}</div></div>`:""}
+    ${c?`<div class="pcol c"><div class="cap">${c.name}</div><div class="bar">${c.score}</div></div>`:""}
+  </div>`;
+  const rest=r.slice(3).map((t,i)=>`<div class="r"><span>${i+4}. ${t.name}</span><span class="s">${t.score}</span></div>`).join("");
+  panel.innerHTML=`<div class="eyebrow">Best-stocked shelf</div>
+    <h2 class="big">${a?a.name+" win!":"Play a round first"}</h2>
+    <p class="sub">They know their families — and their traps.</p>
+    ${r.length?podium:""}${rest?`<div class="others">${rest}</div>`:""}`;
+}
+
+function renderControls(s){
+  const isReveal=(s.kind==="job"||s.kind==="order");
+  let left=`<div class="left">${idx>0?'<button class="btn ghost" id="back">Back</button>':''}</div>`;
+  let right="<div class='right'>";
+  if(s.kind==="setup") right+=`<button class="btn primary" id="start" ${TEAMS.length<2?'disabled':''}>Start the game →</button>`;
+  else if(isReveal && !revealed) right+=`<button class="btn purple" id="reveal">${s.kind==="job"?"Reveal the shelf":"Reveal best call"}</button>`;
+  else if(s.kind==="champions") right+=`<button class="btn" id="restart">Play again</button>`;
+  else { const last=idx===deck.length-1; right+=`<button class="btn primary" id="next">${last?"Finish":"Next →"}</button>`; }
+  right+="</div>";
+  controls.innerHTML=left+right;
+  const g=id=>$(id);
+  if(g("back")) g("back").onclick=()=>{revealed=false; idx=Math.max(0,idx-1); render();};
+  if(g("start")) g("start").onclick=()=>{idx++; render();};
+  if(g("reveal")) g("reveal").onclick=()=>{revealed=true; render();};
+  if(g("next")) g("next").onclick=()=>{revealed=false; idx=Math.min(deck.length-1,idx+1); render();};
+  if(g("restart")) g("restart").onclick=()=>{TEAMS.forEach(t=>t.score=0); revealed=false; idx=0; render();};
+}
+
+render();
+</script>
+</body>
+</html>
